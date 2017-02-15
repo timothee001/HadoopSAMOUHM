@@ -55,6 +55,9 @@ public class StopWordsCountCombinerCompression extends Configured implements Too
      
       
       FileInputFormat.addInputPath(job, new Path("input")); 
+      FileOutputFormat.setCompressOutput(job, true);
+      FileOutputFormat.setOutputCompressorClass(job, BZip2Codec.class);
+      
       Path outputPath = new Path("outputStopWordsCountCompression");
       FileOutputFormat.setOutputPath(job, outputPath);
       FileSystem hdfs = FileSystem.get(getConf());
