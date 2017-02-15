@@ -1,6 +1,8 @@
 package invertedindex;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,6 +16,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -25,13 +28,15 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import relativefrequency.Pair;
+
 public class SimpleInvertedIndex extends Configured implements Tool {
-	
-	
-	
+  
+  
+  
    public static void main(String[] args) throws Exception {
       //System.out.println(Arrays.toString(args));
-	  Configuration conf = new Configuration();
+    Configuration conf = new Configuration();
       int res = ToolRunner.run(conf, new SimpleInvertedIndex(), args);
       System.exit(res);
       
@@ -58,10 +63,11 @@ public class SimpleInvertedIndex extends Configured implements Tool {
       Path outputPath = new Path("outputSimpleInvertedIndex");
       FileOutputFormat.setOutputPath(job, outputPath);
       FileSystem hdfs = FileSystem.get(getConf());
-	  if (hdfs.exists(outputPath))
-	      hdfs.delete(outputPath, true);
+    if (hdfs.exists(outputPath))
+        hdfs.delete(outputPath, true);
       
       job.waitForCompletion(true);
+      
       
       return 0;
    }
@@ -73,33 +79,73 @@ public class SimpleInvertedIndex extends Configured implements Tool {
       @Override
       public void map(LongWritable key, Text value, Context context)
               throws IOException, InterruptedException {
-    	  Path filePath = ((FileSplit) context.getInputSplit()).getPath();
-    	  String filename = ((FileSplit) context.getInputSplit()).getPath().getName().toString();
-    	 
+        Path filePath = ((FileSplit) context.getInputSplit()).getPath();
+        String filename = ((FileSplit) context.getInputSplit()).getPath().getName().toString();
+       
          for (String token: value.toString().split("\\s+")) {
-        	 //System.out.println(token);
-        	 token = token.replaceAll("[^a-zA-Z ]", "").toLowerCase();
-        	if(!allstopwords.contains(token)){
-        		word.set(token);
+           //System.out.println(token);
+           token = token.replaceAll("[^a-zA-Z ]", "").toLowerCase();
+          if(!allstopwords.contains(token)){
+            word.set(token);
                 context.write(word, new Text(filename));
-        	}        
+          }        
          }
       }
    }
 
    public static class Reduce extends Reducer<Text, Text, Text, Text> {
+     
+      HashMap <String, Integer> counts = new HashMap<String, Integer>();
+      
+      protected void setup(Context ctxt) throws IOException, InterruptedException {
+          
+          counts.put("uniqueWord", 0);
+          counts.put("wordSingleDocument", 0);
+           
+       }
+      
       @Override
       public void reduce(Text key, Iterable<Text> values, Context context)
               throws IOException, InterruptedException {
         
-    	 Set<String> docnames = new LinkedHashSet<String>();
-    	
+       Set<String> docnames = new LinkedHashSet<String>();
+       counts.put("uniqueWord", counts.get("uniqueWord") + 1);
+       
          for (Text val : values) {
-        	 docnames.add(val.toString());
+           docnames.add(val.toString());
          }
+         if(docnames.size()==1){
+         counts.put("wordSingleDocument", counts.get("wordSingleDocument") + 1);
+       }
+         
 
          //System.out.println(docnames.toString());
          context.write(key, new Text(docnames.toString().replace("]", "").replace("[", "")));
+        
+         
+         
+      }
+      protected void cleanup(Context ctxt) throws IOException, InterruptedException {
+          
+       System.out.println("Unique words : " + counts.get("uniqueWord"));
+       System.out.println("Words in single document " + counts.get("wordSingleDocument"));
+
+       try{
+          Path pt=new Path("outputSimpleInvertedIndexResult");
+          FileSystem fs = FileSystem.get(new Configuration());
+          BufferedWriter br=new BufferedWriter(new OutputStreamWriter(fs.create(pt,true)));
+                                     // TO append data to a file, use fs.append(Path f)
+          String line;
+          line="Unique words : " + counts.get("uniqueWord") + "\n";        
+          br.write(line);
+          line="Words in single document " + counts.get("wordSingleDocument");         
+          br.write(line);
+          br.close();
+    }catch(Exception e){
+            System.out.println("File not found");
+    }
       }
    }
+   
+  
 }
