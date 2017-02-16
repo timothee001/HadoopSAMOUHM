@@ -44,7 +44,7 @@ public class RelativeFrequencyPair extends Configured implements Tool {
    @Override
    public int run(String[] args) throws Exception {
       System.out.println(Arrays.toString(args));
-      Job job = new Job(getConf());
+      Job job = new Job(getConf(),"RelativeFrequencyPair");
       job.setJarByClass(RelativeFrequencyPair.class);
 
       job.setOutputKeyClass(Text.class);
@@ -127,11 +127,14 @@ public class RelativeFrequencyPair extends Configured implements Tool {
 
                if (topWordsPair.size() > 100) {
                    topWordsPair.pollFirst();
+                   
+                   //we delete the first pair with the lowest frequency
                }
            }
        }
 
        protected void cleanup(Context ctxt) throws IOException,InterruptedException {
+    	   //we call this fonction once at the end
            while (!topWordsPair.isEmpty()) {
                Pair pair = topWordsPair.pollLast();
                ctxt.write(new Text(pair.getWord()), new Text(pair.getNeighbor()));
@@ -139,5 +142,5 @@ public class RelativeFrequencyPair extends Configured implements Tool {
        }
 
        
-}
+   }
 }

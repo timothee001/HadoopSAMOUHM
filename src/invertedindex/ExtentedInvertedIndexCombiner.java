@@ -39,7 +39,7 @@ public class ExtentedInvertedIndexCombiner extends Configured implements Tool {
    @Override
    public int run(String[] args) throws Exception {
       System.out.println(Arrays.toString(args));
-      Job job = new Job(getConf());
+      Job job = new Job(getConf(),"ExtentedInvertedIndexCombiner");
       job.setJarByClass(ExtentedInvertedIndexCombiner.class);
       job.setOutputKeyClass(Text.class);
       job.setOutputValueClass(Text.class);

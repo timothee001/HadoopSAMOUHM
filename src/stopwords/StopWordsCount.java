@@ -33,7 +33,7 @@ public class StopWordsCount extends Configured implements Tool {
       System.out.println(Arrays.toString(args));
       Configuration conf = getConf();
       conf.set("mapred.textoutputformat.separatorText", ",");
-      Job job = new Job(conf, "WordCount");
+      Job job = new Job(conf, "StopWordsCount");
       job.setNumReduceTasks(1);
       job.setJarByClass(StopWordsCount.class);
       job.setOutputKeyClass(Text.class);

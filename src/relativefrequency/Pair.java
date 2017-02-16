@@ -1,6 +1,6 @@
 package relativefrequency;
 
-class Pair implements Comparable<Pair> {
+public class Pair implements Comparable<Pair> {
     double relativeFrequency;
     private String word;
     private String neighbor;

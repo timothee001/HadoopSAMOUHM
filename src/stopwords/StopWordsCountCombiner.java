@@ -31,7 +31,7 @@ public class StopWordsCountCombiner extends Configured implements Tool {
    @Override
    public int run(String[] args) throws Exception {
       System.out.println(Arrays.toString(args));
-      Job job = new Job(getConf());
+      Job job = new Job(getConf(),"StopWordsCountCombiner");
       job.setNumReduceTasks(10);
       job.setJarByClass(StopWordsCountCombiner.class);
       job.setOutputKeyClass(Text.class);

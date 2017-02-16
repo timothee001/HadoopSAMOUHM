@@ -48,7 +48,7 @@ public class RelativeFrequencyStripes extends Configured implements Tool {
    @Override
    public int run(String[] args) throws Exception {
       System.out.println(Arrays.toString(args));
-      Job job = new Job(getConf());
+      Job job = new Job(getConf(),"RelativeFrequencyStripes");
       job.setJarByClass(RelativeFrequencyStripes.class);
      
       job.setOutputKeyClass(Text.class);

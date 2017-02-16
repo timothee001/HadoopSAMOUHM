@@ -31,7 +31,13 @@ public class WordCount extends Configured implements Tool {
    @Override
    public int run(String[] args) throws Exception {
       System.out.println(Arrays.toString(args));
-      Job job = new Job(getConf(), "WordCount");
+      Configuration configuration = this.getConf();
+      configuration.set("fs.defaultFS", "hdfs://10.0.2.15");
+      configuration.set("mapreduce.jobtracker.address", "localhost:54311");
+      configuration.set("mapreduce.framework.name", "yarn");
+      configuration.set("yarn.resourcemanager.address", "localhost:8032");
+     
+      Job job = new Job(configuration, "WordCount");
       job.setNumReduceTasks(2);
       job.setJarByClass(WordCount.class);
       job.setOutputKeyClass(Text.class);
